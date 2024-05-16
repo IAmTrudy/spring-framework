@@ -68,6 +68,15 @@ final class PostProcessorRegistrationDelegate {
 	public static void invokeBeanFactoryPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
 
+		// 这个方法做了什么
+		// 1. 区分传入的beanFactory是不是支持BeanDefinitionRegistry
+		// 1.1 支持,需要优先执行BeanDefinitionRegistryPostProcessor.postProcessBeanDefinitionRegistry
+		// 	执行顺序:入参beanFactoryPostProcessors最先执行
+		// 	然后是从beanFactory中获取BeanDefinitionRegistryPostProcessor,按照PriorityOrdered, Ordered, rest执行
+		//  最后所有已经查到的BeanDefinitionRegistryPostProcessor和入参中的beanFactoryPostProcessors一起执行postProcessBeanFactory
+		// 1.2 不支持,直接执行入参beanFactoryPostProcessors中的postProcessBeanFactory
+		// 2. 执行从beanFactory中获取的BeanFactoryPostProcessor的postProcessBeanFactory, 按照PriorityOrdered, Ordered, rest执行
+
 		// WARNING: Although it may appear that the body of this method can be easily
 		// refactored to avoid the use of multiple loops and multiple lists, the use
 		// of multiple lists and multiple passes over the names of processors is
@@ -119,6 +128,7 @@ final class PostProcessorRegistrationDelegate {
 			currentRegistryProcessors.clear();
 
 			// Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
+			// 为什么调用了两次 line 108-109 ?因为invokeBeanDefinitionRegistryPostProcessors方法执行后可能会有改动
 			postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 			for (String ppName : postProcessorNames) {
 				if (!processedBeans.contains(ppName) && beanFactory.isTypeMatch(ppName, Ordered.class)) {

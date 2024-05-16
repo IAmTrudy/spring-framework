@@ -77,15 +77,18 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 
 	/** Cache of singleton objects: bean name to bean instance. */
+	// 一级缓存 存放完全实例化且属性赋值完成的bean 可以使用
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/** Creation-time registry of singleton factories: bean name to ObjectFactory. */
+	// 三级缓存 存放实例化完成的工厂
 	private final Map<String, ObjectFactory<?>> singletonFactories = new ConcurrentHashMap<>(16);
 
 	/** Custom callbacks for singleton creation/registration. */
 	private final Map<String, Consumer<Object>> singletonCallbacks = new ConcurrentHashMap<>(16);
 
 	/** Cache of early singleton objects: bean name to bean instance. */
+	// 二级缓存 存放早期bean的引用 尚未装配属性的bean
 	private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16);
 
 	/** Set of registered singletons, containing the bean names in registration order. */
@@ -116,9 +119,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Map<String, Set<String>> containedBeanMap = new ConcurrentHashMap<>(16);
 
 	/** Map between dependent bean names: bean name to Set of dependent bean names. */
+	// key = bean name ,value = 依赖当前bean的bean name
 	private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<>(64);
 
 	/** Map between depending bean names: bean name to Set of bean names for the bean's dependencies. */
+	// key = bean name ,value = 当前bean依赖的bean name
 	private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<>(64);
 
 

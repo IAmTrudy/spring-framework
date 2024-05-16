@@ -681,6 +681,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		getEnvironment().validateRequiredProperties();
 
 		// Store pre-refresh ApplicationListeners...
+		// 这个条件判断使this.earlyApplicationListeners == this.applicationListeners
 		if (this.earlyApplicationListeners == null) {
 			this.earlyApplicationListeners = new LinkedHashSet<>(this.applicationListeners);
 		}
@@ -692,6 +693,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// Allow for the collection of early ApplicationEvents,
 		// to be published once the multicaster is available...
+		// 创建一个容器用于保存早期待发布的事件集合 什么是早期事件?
+		// 我们的事件监听器还没有注册到事件多播器上的时候要发布的事件都称为早期事件
 		this.earlyApplicationEvents = new LinkedHashSet<>();
 	}
 

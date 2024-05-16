@@ -419,6 +419,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			parser.validate();
 
 			Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
+			// 这一步没有意义 alreadyParsed是空的
 			configClasses.removeAll(alreadyParsed);
 
 			// Read the model and create bean definitions based on its content
