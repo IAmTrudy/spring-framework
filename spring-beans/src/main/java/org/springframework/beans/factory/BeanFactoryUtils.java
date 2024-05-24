@@ -68,6 +68,7 @@ public abstract class BeanFactoryUtils {
 	 * @see BeanFactory#FACTORY_BEAN_PREFIX
 	 */
 	public static boolean isFactoryDereference(@Nullable String name) {
+		// 返回传入的名称是不是一个工厂bean的名称
 		return (name != null && name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
 	}
 
@@ -80,13 +81,19 @@ public abstract class BeanFactoryUtils {
 	 */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
+		// 不是工厂bean直接返回
 		if (!name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX)) {
 			return name;
 		}
+		// transformedBeanNameCache -> (&name,name)
+		// 如果name可以获取到缓存,则返回;
+		// 不在缓存或者缓存是null,将name和去掉"&"的name缓存,并返回去掉"&"的name
 		return transformedBeanNameCache.computeIfAbsent(name, beanName -> {
 			do {
+				// 截掉一个"&"
 				beanName = beanName.substring(BeanFactory.FACTORY_BEAN_PREFIX.length());
 			}
+			// 如果还是以"&"为开始
 			while (beanName.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
 			return beanName;
 		});

@@ -117,17 +117,23 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+		// 工厂bean是单例 且 一级缓存中包含要创建的对象
 		if (factory.isSingleton() && containsSingleton(beanName)) {
+			// 从缓存中获取工厂bean生产的对象
 			Object object = this.factoryBeanObjectCache.get(beanName);
 			if (object == null) {
+				// 调用工厂的getObject
 				object = doGetObjectFromFactoryBean(factory, beanName);
 				// Only post-process and store if not put there already during getObject() call above
 				// (e.g. because of circular reference processing triggered by custom getBean calls)
+				// 再次从缓存中获取一次工厂bean生产的对象
 				Object alreadyThere = this.factoryBeanObjectCache.get(beanName);
+				// 获取到就使用缓存中的
 				if (alreadyThere != null) {
 					object = alreadyThere;
 				}
 				else {
+					// 是否进行后置处理
 					if (shouldPostProcess) {
 						if (isSingletonCurrentlyInCreation(beanName)) {
 							// Temporarily return non-post-processed object, not storing it yet
@@ -135,6 +141,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 						}
 						beforeSingletonCreation(beanName);
 						try {
+							// 执行bean初始化后置处理
 							object = postProcessObjectFromFactoryBean(object, beanName);
 						}
 						catch (Throwable ex) {
@@ -145,7 +152,9 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 							afterSingletonCreation(beanName);
 						}
 					}
+					// 一级缓存中包含要创建的对象
 					if (containsSingleton(beanName)) {
+						// 缓存生产对象
 						this.factoryBeanObjectCache.put(beanName, object);
 					}
 				}
@@ -175,6 +184,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	private Object doGetObjectFromFactoryBean(FactoryBean<?> factory, String beanName) throws BeanCreationException {
+		// 从工厂中生产一个对象
 		Object object;
 		try {
 			object = factory.getObject();

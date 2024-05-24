@@ -1013,14 +1013,18 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
+		// 复制beanDefinitionNames到beanNames
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
 		List<CompletableFuture<?>> futures = new ArrayList<>();
+		// 这是一个ThreadLocal
 		this.preInstantiationThread.set(PreInstantiation.MAIN);
 		try {
 			for (String beanName : beanNames) {
+				// 获取合并的RBD
 				RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+				// 非抽象 单例
 				if (!mbd.isAbstract() && mbd.isSingleton()) {
 					CompletableFuture<?> future = preInstantiateSingleton(beanName, mbd);
 					if (future != null) {
@@ -1055,17 +1059,21 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 	@Nullable
 	private CompletableFuture<?> preInstantiateSingleton(String beanName, RootBeanDefinition mbd) {
+		// 后台加载(异步)
 		if (mbd.isBackgroundInit()) {
 			Executor executor = getBootstrapExecutor();
 			if (executor != null) {
+				// 获取依赖的bean
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
 						getBean(dep);
 					}
 				}
+				// 启动后台加载任务
 				CompletableFuture<?> future = CompletableFuture.runAsync(
 						() -> instantiateSingletonInBackgroundThread(beanName), executor);
+				// 将后台任务加入到三级缓存
 				addSingletonFactory(beanName, () -> {
 					try {
 						future.join();
@@ -1075,6 +1083,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					}
 					return future;  // not to be exposed, just to lead to ClassCastException in case of mismatch
 				});
+				// 非懒加载 返回任务,否则返回null
 				return (!mbd.isLazyInit() ? future : null);
 			}
 			else if (logger.isInfoEnabled()) {
@@ -1082,6 +1091,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						"without bootstrap executor configured - falling back to mainline initialization");
 			}
 		}
+		// 同步 非懒加载
 		if (!mbd.isLazyInit()) {
 			instantiateSingleton(beanName);
 		}
@@ -1105,12 +1115,16 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	private void instantiateSingleton(String beanName) {
+		// 是工厂bean
 		if (isFactoryBean(beanName)) {
+			// 先加载工厂bean
 			Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+			// 再判断是不是提前加载工厂bean生产的对象,默认懒加载模式,等到用的时候再初始化成产的对象
 			if (bean instanceof SmartFactoryBean<?> smartFactoryBean && smartFactoryBean.isEagerInit()) {
 				getBean(beanName);
 			}
 		}
+		// 不是工厂bean,加载bean
 		else {
 			getBean(beanName);
 		}
