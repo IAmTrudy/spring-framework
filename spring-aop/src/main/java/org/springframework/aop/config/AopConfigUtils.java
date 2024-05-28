@@ -119,19 +119,21 @@ public abstract class AopConfigUtils {
 			Class<?> cls, BeanDefinitionRegistry registry, @Nullable Object source) {
 
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
-
+		// 如果已经存在BD
 		if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
 			BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+			// 如果当前要注册的类型和已经存在的类型不一致
 			if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
 				int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());
 				int requiredPriority = findPriorityForClass(cls);
+				// 优先级更大的设置为BD的类型
 				if (currentPriority < requiredPriority) {
 					apcDefinition.setBeanClassName(cls.getName());
 				}
 			}
 			return null;
 		}
-
+		// 不存在,则注册一个BD
 		RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
 		beanDefinition.setSource(source);
 		beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);
